@@ -1,0 +1,88 @@
+# ==========================================
+# Sl0thm4n Image Preprocessor .gitignore
+# ==========================================
+
+# --- Python cache & build ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.spec
+*.egg-info/
+build/
+dist/
+pip-wheel-metadata/
+
+# --- Virtual environments ---
+.venv/
+env/
+venv/
+
+# --- Logs & temp files ---
+logs/
+*.log
+*.bak
+*.tmp
+*.swp
+*.swo
+
+# --- Model and binary files ---
+sl0thfier/models/*.onnx
+sl0thfier/models/*.onnx_data
+sl0thfier/realesrgan/models/*.bin
+sl0thfier/realesrgan/models/*.param
+sl0thfier/realesrgan/*.exe
+sl0thfier/realesrgan/*.dll
+
+# --- Image outputs ---
+*.png
+*.jpg
+*.jpeg
+*.webp
+512x512/
+1024x1024/
+__sloth_upscaled_*.png
+
+# --- Windows system cruft ---
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# --- IDE / Editor settings ---
+.vscode/
+.idea/
+*.code-workspace
+
+# --- Python packaging artifacts ---
+*.zip
+*.tar.gz
+*.egg
+MANIFEST
+
+# --- Test artifacts ---
+tests/__pycache__/
+tests/tmp/
+tests/output/
+
+# --- Release / Build outputs ---
+dist/
+output/
+*.exe
+*.dll
+
+# --- UV cache ---
+.uv-cache/
+uv.lock
+
+# --- pyenv version file ---
+.python-version
+
+# ─── Binaries and Models ───────────────────────────
+*.onnx
+*.onnx_data
+*.exe
+*.dll
+*.bin
+*.ckpt
+*.pt
+*.pb
