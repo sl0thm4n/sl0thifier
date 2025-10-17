@@ -1,5 +1,6 @@
 [project]
 name = "sl0thm4n-image-preprocessor"
+license = "MIT"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
