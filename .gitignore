@@ -69,7 +69,6 @@ output/
 
 # --- UV cache ---
 .uv-cache/
-uv.lock
 
 # --- pyenv version file ---
 .python-version

@@ -16,16 +16,12 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "bump-my-version>=1.2.4",
     "pytest>=8.4.2",
     "pytest-black>=0.6.0",
     "pytest-cov>=7.0.0",
-    "pytest-flake8>=1.3.0",
+    "pytest-ruff>=0.5",
 ]
-
-[tool.pytest.ini_options]
-minversion = "7.0"
-addopts = "--black --flake8 --cov=sl0thfier --cov-report=term-missing -v"
-testpaths = ["tests"]
 
 [tool.black]
 line-length = 88
@@ -48,3 +44,19 @@ line-length = 88
 select = ["E", "F"]
 exclude = ["build", "dist", ".venv", "__pycache__"]
 extend-ignore = ["E203"]
+
+[tool.bump-my-version]
+version = "0.1.0"
+tag = true
+tag-name = "v{new_version}"
+
+[tool.bump-my-version.file-find]
+search-paths = ["sl0thifier", "pyproject.toml"]
+
+[[tool.bump-my-version.version-pattern]]
+search = 'version\s*=\s*"(?P<version>\d+\.\d+\.\d+)"'
+replace = 'version = "{new_version}"'
+
+[[tool.bump-my-version.version-pattern]]
+search = '__version__\s*=\s*"(?P<version>\d+\.\d+\.\d+)"'
+replace = '__version__ = "{new_version}"'
