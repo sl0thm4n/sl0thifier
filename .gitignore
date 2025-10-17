@@ -27,12 +27,9 @@ logs/
 *.swo
 
 # --- Model and binary files ---
-sl0thfier/models/*.onnx
-sl0thfier/models/*.onnx_data
-sl0thfier/realesrgan/models/*.bin
-sl0thfier/realesrgan/models/*.param
-sl0thfier/realesrgan/*.exe
-sl0thfier/realesrgan/*.dll
+sl0thifier/models/*.onnx
+sl0thifier/models/*.onnx_data
+sl0thifier/realesrgan/*
 
 # --- Image outputs ---
 *.png
