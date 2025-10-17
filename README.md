@@ -1,36 +1,167 @@
-# 🦥 sl0thifier
-> AI-powered image refinement — slow, precise, and deadly clean.  
-> Designed by **sl0thm4n** · Coded by **ChatGPT**
+<!-- Sl0thifier Mega ASCII Logo -->
+```
+                             %%%%%%%%%%%%%%%%%%%%%%%%%                              
+                         %#############################%%%%                          
+                     #*#########**********************######*#                       
+                     %%%%###*******************************#%%%#                     
+                  #%%###****####*******************************#%%                   
+                %%%################******************************#%%%                
+              %%%#####*################*************#######********#%%%              
+              %%%#########******++#######****#####*++++++***###****##%%              
+            %%%#########**++======*##*###*****#***+=-======+********##%%%            
+            %%%######++=======----==++*######***==---------====+##****#%%            
+            %%%####++=======----------===##++===-----==--------==+##**#%#            
+          %%#######+===*%%%%%%%%==------------------+%%%%%%%%+-===******#%%          
+          %%#####**++*##%%%%%%%%##+==----==-------*##%%%%%%%%##*==++###*#%%          
+          %%#####**###%%%%%%%%%%%%#*+----==-----==*%%%%%%%%%%%%#**++###*#%%          
+          %%#####**#%%%%%%%%##%%%%%%+-----------==*%%%%%%##%%%%%%#**###*#%%          
+          %%#####%%%%%%%%%%#==%%%%%%+-==========--*%%%%%%-=#%%%%%%%%#####%%          
+          %%###%%%%%%%%%%%%%%%%%%%*==-+%%%%%%#+*=-*%%%%%%%%%%%%%%%%%%%###%%          
+          %%###%%%%%%%%%%%%%%%%%*+==*%#####**#%%=-==+%%%%%%%%%%%%%%%%%#*#%%          
+          %%###%%%%%%%%%%%%%%%**====*%%%%##%%%%%=-===+*%%%%%%%%%%%%%%%###%%          
+          #%#####%%%%%%%%###**+=====+##%%##%%#**=---==+****###%%%%%%#####%%          
+          #%######%%%%%%%#++========++*%%%%%%#===-=========+*#%%%%%%#####%%          
+            %%####%%%**++=====%%##+====++%%*++----*%%%*-----===+%%%%##**#%%          
+            %%######%++=========#%%%*++======+++#%%%*==----====+%##*###%%            
+            %%%######+++++========*%%%%%%%%%%%%%%%+===----=====+#######%%            
+          %%%##########*+++========+++++++++++++===----======+**#######%%            
+          %%############*+++=====================----=====+++*###########%%          
+          #%##############*+++++==============------=====**##########**##%%          
+        %%####################**++++============+++++**###########******#%%          
+        %%#####**###############################################*********##%%%       
+      %%#####******####################################*########**********#%%%       
+      %%#####******############*#############################**************###%%     
+    %%#######********################################*#####*****##***********#%%     
+    %%#####**********###########**###*#####**###******###******###***********#%%     
+    %%#######******#######*###*******************************###%%###**********#%%#  
+    %%#####********#######***********************************###%%###**********#%%#  
+ %%%#####**********%%#######*********************************###%%#####*********##%%%
+ %%%#######********#%#######*******************************#####%%####***********#%%%
+ %%%#######********###########*****************************#####%%####***********#%%%
+ %%%#######**********#%#######*****************************#####%%#####**********#%%%
+ %%%#####************#%#######**************************########%%#######********###%
+ %%%#####*****#%%%%%%%%%%#######**********************######%%%%%%%%%%%%%%###****###%
+ %%%#######*##############%%%########***************#################################
+ %%%#############********##############************###########***********###########%
+ %%%#########*******************#%######**********###%%%%************************###% 
+```
+
+# sl0thifier 🦥 – High-Performance Image Preprocessor (Real-ESRGAN + ONNX)
+
+**sl0thifier** is a Python-based high-resolution image preprocessing tool designed to deliver efficient and high-quality results using ONNX inference and Real-ESRGAN super-resolution models.
 
 ---
 
-**sl0thifier** is a GPU-accelerated image preprocessor that upscales, refines, and removes backgrounds with surgical precision — built for dataset preparation, creative workflows, and AI model training.
+## ✨ Features
 
-### ✨ Features
-- RealESRGAN-based upscaling (Vulkan / CUDA / DirectML)
-- BiRefNet background removal (ONNX)
-- Tone correction and color balance
-- GUI-based workflow with live previews
-- Batch processing with auto output folders (512×512 / 1024×1024)
-
----
-
-### ⚙️ Tech Stack
-- Python 3.11+
-- ONNX Runtime (GPU / DirectML)
-- RealESRGAN NCNN Vulkan
-- Pillow, OpenCV, Tkinter
+- ✅ Fast inference using ONNX runtime  
+- ✅ Super-resolution enhancement via Real-ESRGAN  
+- ✅ Modular image processing (`imageio`, `resize`, `tone`, etc.)  
+- ✅ Type-safe configuration using Pydantic v2  
+- ✅ Clean, test-driven codebase with full coverage  
+- ✅ Semantic versioning and automated release process  
 
 ---
 
-### 🧠 Philosophy
-> “Not fast. Just perfect.” — *sl0thm4n*
+## 📦 Installation
+
+```bash
+# Python 3.10+ recommended
+git clone https://github.com/sl0thm4n/sl0thifier.git
+cd sl0thifier
+
+# Create virtual environment
+uv venv .venv
+source .venv/bin/activate
+
+# Install dependencies
+uv pip install -r requirements.txt
+uv pip install -r requirements-dev.txt  # For development
+```
+
+---
+
+## 🧪 Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# With coverage
+pytest --cov=sl0thifier
+
+# Code style checks
+black . --check
+ruff check .
+flake8
+```
+
+---
+
+## 🚀 Versioning & Releases
+
+This project uses [bump-my-version](https://github.com/callowayproject/bump-my-version) for automated semantic versioning.
+
+```bash
+# Example: Bump patch version (e.g., 0.1.0 → 0.1.1)
+bump-my-version bump patch --commit --tag
+
+# Push to GitHub with tag
+git push && git push --tags
+```
+
+Current version: `0.1.0`  
+Author: [sl0thm4n](https://github.com/sl0thm4n)
+
+---
+
+## 📁 Project Structure
+
+```
+sl0thifier/
+├── __init__.py
+├── config/         # Pydantic configuration models
+├── core/
+│   ├── imageio.py  # Image loading and saving
+│   ├── resize.py   # Image resizing operations
+│   └── tone.py     # Color/tone adjustments
+├── models/
+│   ├── birefnet.py     # ONNX model handler
+│   ├── realesrgan.py   # Real-ESRGAN interface
+├── utils/          # Logging, helpers, etc.
+tests/              # pytest test suite
+```
+
+---
+
+## 🙌 Contribution Guide
+
+Pull requests and contributions are welcome!
+
+Before submitting a PR:
+
+- Format code with `black`
+- Pass all checks: `ruff`, `flake8`, `pytest`
+- Add relevant tests
+- Follow consistent commit messages
+
+*A full CONTRIBUTING guide will be added soon.*
+
+---
+
+## 🧠 Tech Stack
+
+- Python 3.10+  
+- ONNX Runtime  
+- Real-ESRGAN  
+- NumPy, OpenCV, Pillow  
+- Pydantic v2  
+- Pytest, Coverage, Ruff, Black  
+- `uv` for dependency and environment management  
 
 ---
 
 ## 📜 License
-This project is proprietary software.  
-© 2025 **sl0thm4n** — All rights reserved.  
 
-Unauthorized copying, modification, or redistribution of any part of this project  
-is strictly prohibited without explicit permission from the author.
+MIT License  
+Copyright (c) 2025 [sl0thm4n](https://github.com/sl0thm4n)
