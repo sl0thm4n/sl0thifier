@@ -9,6 +9,7 @@ def ensure_png_alpha(img: Image.Image) -> Image.Image:
     """Ensure image is in RGBA mode."""
     return img.convert("RGBA")
 
+
 def parse_hex_color(s: str) -> Tuple[int, int, int]:
     """Convert a hex string or known color name to RGB tuple."""
     s = s.strip().lower()

@@ -7,11 +7,13 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "customtkinter>=5.2.2",
+    "httpx>=0.28.1",
     "numpy>=2.3.4",
     "onnxruntime-gpu>=1.23.0",
     "opencv-python>=4.11.0.86",
     "pillow>=12.0.0",
     "rembg>=2.0.67",
+    "tkinterdnd2>=0.4.3",
 ]
 
 [dependency-groups]
@@ -21,6 +23,8 @@ dev = [
     "pytest-black>=0.6.0",
     "pytest-cov>=7.0.0",
     "pytest-ruff>=0.5",
+    "rich>=14.2.0",
+    "typer>=0.19.2",
 ]
 
 [tool.black]
@@ -60,3 +64,6 @@ replace = 'version = "{new_version}"'
 [[tool.bump-my-version.version-pattern]]
 search = '__version__\s*=\s*"(?P<version>\d+\.\d+\.\d+)"'
 replace = '__version__ = "{new_version}"'
+
+[project.scripts]
+sl0thify = "sl0thifier.sl0thify:main"

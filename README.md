@@ -12,6 +12,7 @@
 - ✅ Type-safe configuration using Pydantic v2  
 - ✅ Clean, test-driven codebase with full coverage  
 - ✅ Semantic versioning and automated release process  
+- ✅ 🧠 One-command smart CLI with parallel processing  
 
 ---
 
@@ -19,17 +20,40 @@
 
 ```bash
 # Python 3.10+ recommended
-git clone https://github.com/sl0thm4n/sl0thifier.git
-cd sl0thifier
-
-# Create virtual environment
 uv venv .venv
 source .venv/bin/activate
 
 # Install dependencies
-uv pip install -r requirements.txt
-uv pip install -r requirements-dev.txt  # For development
+uv pip install --editable .
 ```
+
+> `sl0thify` command will now be available globally within the environment.
+
+---
+
+## ⚙️ CLI Usage
+
+```bash
+sl0thify --images=PATH [--model-name=MODEL] --width=WIDTH --height=HEIGHT [--output-dir=OUTDIR]
+```
+
+### ✅ Example
+
+```bash
+sl0thify --images=./cats --width=512 --height=512
+sl0thify --images=./cats/cat1.jpg --model-name=realesrnet-x4plus --width=256 --height=256 --output-dir=./out
+```
+
+### 💡 How it works
+
+Each image passes through the following pipeline:
+
+1. ✅ 4x Upscale (Real-ESRGAN)
+2. ✅ Denoise (inherent to Real-ESRGAN)
+3. ✅ CLAHE Enhancement
+4. ✅ Final resize to target `--width` × `--height`
+
+Multiple images are processed **in parallel** using all available CPU cores.
 
 ---
 
@@ -58,7 +82,6 @@ This project uses [bump-my-version](https://github.com/callowayproject/bump-my-v
 # Example: Bump patch version (e.g., 0.1.0 → 0.1.1)
 bump-my-version bump patch --commit --tag
 
-# Push to GitHub with tag
 git push && git push --tags
 ```
 
@@ -81,6 +104,7 @@ sl0thifier/
 │   ├── birefnet.py     # ONNX model handler
 │   ├── realesrgan.py   # Real-ESRGAN interface
 ├── utils/          # Logging, helpers, etc.
+sl0thify.py         # CLI entrypoint
 tests/              # pytest test suite
 ```
 

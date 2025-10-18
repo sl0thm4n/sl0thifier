@@ -1,19 +1,13 @@
 import logging
 import os
-import sys
-from datetime import datetime
 
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
+LOG_LEVEL = getattr(logging, LOG_LEVEL, logging.INFO)
 
-def setup_logger(name="sl0thm4n", log_dir="logs") -> logging.Logger:
-    os.makedirs(log_dir, exist_ok=True)
-    log_file = os.path.join(log_dir, f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+logger: logging.Logger = logging.getLogger("sl0thifier")
+logger.setLevel(LOG_LEVEL)
 
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        handlers=[
-            logging.FileHandler(log_file, encoding="utf-8"),
-            logging.StreamHandler(sys.stdout)
-        ]
-    )
-    return logging.getLogger(name)
+if not logger.hasHandlers():
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("🦥 %(message)s"))
+    logger.addHandler(handler)
