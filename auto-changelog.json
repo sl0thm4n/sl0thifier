@@ -1,0 +1,11 @@
+{
+    "output": "CHANGELOG.md",
+    "template": "keepachangelog",
+    "unreleased": false,
+    "commitLimit": false,
+    "tagPattern": "^v?[0-9]+\\.[0-9]+\\.[0-9]+$",
+    "backfillLimit": 100,
+    "hideEmptyReleases": true,
+    "prepend": true,
+    "releaseSummary": true
+}

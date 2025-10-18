@@ -82,3 +82,5 @@ output/
 *.ckpt
 *.pt
 *.pb
+
+/scripts
