@@ -6,28 +6,31 @@
 
 ## ✨ Features
 
-* ✅ Fast inference using ONNX runtime
-* ✅ Super-resolution enhancement via Real-ESRGAN
-* ✅ Modular image processing (`imageio`, `resize`, `tone`, etc.)
-* ✅ Type-safe configuration using Pydantic v2
-* ✅ Clean, test-driven codebase with full coverage
-* ✅ Semantic versioning and automated release process
-* ✅ 🧠 One-command smart CLI with parallel processing
+- ✅ Fast inference using ONNX runtime  
+- ✅ Super-resolution enhancement via Real-ESRGAN  
+- ✅ Modular image processing (`imageio`, `resize`, `tone`, etc.)  
+- ✅ Type-safe configuration using Pydantic v2  
+- ✅ Clean, test-driven codebase with full coverage  
+- ✅ Semantic versioning and automated release process  
+- ✅ 🧠 One-command smart CLI with parallel processing  
 
 ---
 
-## 📦 Installation
+## 📊 Requirements
 
-```bash
-# Python 3.10+ recommended
-uv venv .venv
-source .venv/bin/activate
+- Python 3.10+
+- CUDA Toolkit (11.2 or later recommended) ✨
+- cuDNN (matching CUDA version)
+- ONNX Runtime
+- Vulkan-compatible GPU for RealESRGAN NCNN executable (Windows only)
 
-# Install dependencies
-uv pip install --editable .
-```
+### 🔗 Required model files
+- [`realesrgan/realesrgan-ncnn-vulkan.exe`](https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-windows.zip) – Windows-only NCNN executable
+- `realesrgan/models/realesrgan-x4plus.bin`
+- `realesrgan/models/realesrgan-x4plus.param`
+- [`birefnet/birefnet.onnx`](https://github.com/ZhengPeng7/BiRefNet/releases/download/v1/BiRefNet-general-resolution_512x512-fp16-epoch_216.onnx) – 918,483KB version with weights included
 
-> `sl0thify` command will now be available globally within the environment.
+> If using background removal or super-resolution, ensure your system supports CUDA acceleration for best performance.
 
 ---
 
@@ -50,14 +53,13 @@ sl0thify --images=./cats/cat1.jpg --model-name=realesrnet-x4plus --width=256 --h
 
 A simple GUI is available via `main.py` using `tkinter` and `tkinterdnd2`. Features include:
 
-* 💾 Drag & Drop support for files and folders
-* ⚖️ Options:
-
-  * Remove Background (optional)
-  * New Background Color (None / White / Black / Green)
-* ⏳ Progress bar display
-* 📂 Output saved to same directory with `_sl0thified_WIDTHxHEIGHT` suffix
-* ✨ Automatic processing upon file drop
+- 💾 Drag & Drop support for files and folders
+- ⚖️ Options:
+  - Remove Background (optional)
+  - New Background Color (None / White / Black / Green)
+- ⏳ Progress bar display
+- 📂 Output saved to same directory with `_sl0thified_WIDTHxHEIGHT` suffix
+- ✨ Automatic processing upon file drop
 
 ---
 
@@ -74,23 +76,23 @@ Each image passes through the following steps:
 
 ## 💥 Recent Bugfixes & Improvements
 
-* Fixed missing `img` argument in `KingSl0th.sl0thify()` call
-* Corrected faulty `ImageUpscaler` initialization
-* Replaced faulty 470MB `BiRefNet.onnx` with 930MB full model
-* UI simplified: removed thumbnails, added plain text feedback
-* Background removal options UI cleaned up
-* Drop zone and progress bar layout improved
+- Fixed missing `img` argument in `KingSl0th.sl0thify()` call
+- Corrected faulty `ImageUpscaler` initialization
+- Replaced faulty 470MB `BiRefNet.onnx` with 930MB full model
+- UI simplified: removed thumbnails, added plain text feedback
+- Background removal options UI cleaned up
+- Drop zone and progress bar layout improved
 
 ---
 
 ## ⚠️ OS Compatibility Matrix
 
-| Feature               | Windows | Linux          | macOS           |
-| --------------------- | ------- | -------------- | --------------- |
-| Tkinter + DnD         | ✅ Full  | ⚠ Limited      | ⚠ Limited       |
-| RealESRGAN Executable | ✅ Yes   | ❌ Needs binary | ❌ Not available |
-| ONNX Runtime          | ✅ Yes   | ✅ Yes          | ✅ Yes           |
-| Full Pipeline         | ✅ Works | ⚠ Minor fixes  | ⚠ Minor fixes   |
+| Feature               | Windows | Linux          | macOS          |
+|----------------------|---------|----------------|----------------|
+| Tkinter + DnD        | ✅ Full  | ⚠ Limited       | ⚠ Limited       |
+| RealESRGAN Executable| ✅ Yes   | ❌ Needs binary | ❌ Not available |
+| ONNX Runtime         | ✅ Yes   | ✅ Yes         | ✅ Yes         |
+| Full Pipeline        | ✅ Works| ⚠ Minor fixes   | ⚠ Minor fixes   |
 
 ---
 
@@ -122,7 +124,7 @@ bump-my-version bump patch --commit --tag
 git push && git push --tags
 ```
 
-Current version: `0.1.0`
+Current version: `0.1.0`  
 Author: [sl0thm4n](https://github.com/sl0thm4n)
 
 ---
@@ -153,10 +155,10 @@ Pull requests and contributions are welcome!
 
 Before submitting a PR:
 
-* Format code with `black`
-* Pass all checks: `ruff`, `flake8`, `pytest`
-* Add relevant tests
-* Follow consistent commit messages
+- Format code with `black`
+- Pass all checks: `ruff`, `flake8`, `pytest`
+- Add relevant tests
+- Follow consistent commit messages
 
 *A full CONTRIBUTING guide will be added soon.*
 
@@ -164,17 +166,17 @@ Before submitting a PR:
 
 ## 🧠 Tech Stack
 
-* Python 3.10+
-* ONNX Runtime
-* Real-ESRGAN
-* NumPy, OpenCV, Pillow
-* Pydantic v2
-* Pytest, Coverage, Ruff, Black
-* `uv` for dependency and environment management
+- Python 3.10+  
+- ONNX Runtime  
+- Real-ESRGAN  
+- NumPy, OpenCV, Pillow  
+- Pydantic v2  
+- Pytest, Coverage, Ruff, Black  
+- `uv` for dependency and environment management  
 
 ---
 
 ## 📜 License
 
-MIT License
+MIT License  
 Copyright (c) 2025 [sl0thm4n](https://github.com/sl0thm4n)
