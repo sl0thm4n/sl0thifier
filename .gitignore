@@ -27,9 +27,11 @@ logs/
 *.swo
 
 # --- Model and binary files ---
-sl0thifier/models/*.onnx
-sl0thifier/models/*.onnx_data
-sl0thifier/realesrgan/*
+birefnet/*
+birefnet/models/*.*
+realesrgan/*
+/birefnet
+/realesrgan
 
 # --- Image outputs ---
 *.png
@@ -82,5 +84,6 @@ output/
 *.ckpt
 *.pt
 *.pb
+*.param
 
 /scripts
