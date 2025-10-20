@@ -4,31 +4,31 @@
 
 ---
 
-## ✨ Features
-
-- ✅ Fast inference using ONNX runtime  
-- ✅ Super-resolution enhancement via Real-ESRGAN  
-- ✅ Modular image processing (`imageio`, `resize`, `tone`, etc.)  
-- ✅ Type-safe configuration using Pydantic v2  
-- ✅ Clean, test-driven codebase with full coverage  
-- ✅ Semantic versioning and automated release process  
-- ✅ 🧠 One-command smart CLI with parallel processing  
-
----
-
 ## 📊 Requirements
-
-- Python 3.10+
-- CUDA Toolkit (11.2 or later recommended) ✨
-- cuDNN (matching CUDA version)
-- Vulkan-compatible GPU for RealESRGAN NCNN executable (Windows only)
 
 ### 🔗 Required model files
 - [`realesrgan/realesrgan-ncnn-vulkan.exe`](https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-windows.zip) – Windows-only NCNN executable
 - `realesrgan/models/realesrgan-x4plus.bin`
+- `realesrgan/models/realesrgan-x4plus.param`
+
 - [`birefnet/birefnet.onnx`](https://github.com/ZhengPeng7/BiRefNet/releases/download/v1/BiRefNet-general-resolution_512x512-fp16-epoch_216.onnx) – 918,483KB version with weights included
 
-> If using background removal or super-resolution, ensure your system supports CUDA acceleration for best performance.
+> After installation, the `sl0thify` CLI will be available in your environment.
+
+### 2. Download model files manually
+
+Place the following files in the project directory structure:
+- `realesrgan/realesrgan-ncnn-vulkan.exe`
+- `realesrgan/models/realesrgan-x4plus.bin`
+- `birefnet/birefnet.onnx`
+
+See [Required model files](#-required-model-files) for direct links.
+
+### 3. (Optional) Run the GUI
+
+```bash
+python main.py
+```
 
 ---
 
@@ -82,7 +82,7 @@ sl0thify --images=./cats/cat1.jpg --model-name=realesrnet-x4plus --width=256 --h
 
 A simple GUI is available via `main.py` using `tkinter` and `tkinterdnd2`. Features include:
 
-- 💾 Drag & Drop support for files and folders
+- 📂 Drag & Drop support for files and folders
 - ⚖️ Options:
   - Remove Background (optional)
   - New Background Color (None / White / Black / Green)
@@ -188,7 +188,7 @@ realesrgan/
 
 ---
 
-## 🙌 Contribution Guide
+## 🤝 Contribution Guide
 
 Pull requests and contributions are welcome!
 
@@ -209,7 +209,6 @@ Before submitting a PR:
 - ONNX Runtime  
 - Real-ESRGAN  
 - NumPy, OpenCV, Pillow  
-- Pydantic v2  
 - Pytest, Coverage, Ruff, Black  
 - `uv` for dependency and environment management  
 
