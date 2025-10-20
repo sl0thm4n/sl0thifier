@@ -9,43 +9,9 @@
 ### 🔗 Required model files
 - [`realesrgan/realesrgan-ncnn-vulkan.exe`](https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-windows.zip) – Windows-only NCNN executable
 - `realesrgan/models/realesrgan-x4plus.bin`
-<<<<<<< HEAD
 - `realesrgan/models/realesrgan-x4plus.param`
->>>>>>> 7b332c3 (README.md Update (#4))
-=======
->>>>>>> 69ad529badfac084170f75c753b0bc54c599fc35
+
 - [`birefnet/birefnet.onnx`](https://github.com/ZhengPeng7/BiRefNet/releases/download/v1/BiRefNet-general-resolution_512x512-fp16-epoch_216.onnx) – 918,483KB version with weights included
-
-> After installation, the `sl0thify` CLI will be available in your environment.
-
-### 2. Download model files manually
-
-Place the following files in the project directory structure:
-- `realesrgan/realesrgan-ncnn-vulkan.exe`
-- `realesrgan/models/realesrgan-x4plus.bin`
-- `birefnet/birefnet.onnx`
-
-See [Required model files](#-required-model-files) for direct links.
-
-### 3. (Optional) Run the GUI
-
-```bash
-python main.py
-```
-
----
-
-## 📦 Installation
-
-### 1. Create environment (Python 3.10+)
-
-```bash
-uv venv .venv --python=3.10 --seed
-source .venv/bin/activate
-
-# Install dependencies
-uv pip install --editable .
-```
 
 > After installation, the `sl0thify` CLI will be available in your environment.
 
