@@ -32,7 +32,7 @@
 
 ---
 
-## 📦 Installation
+## 📊 Requirements
 
 ### 1. Create environment (Python 3.10+)
 
@@ -40,9 +40,11 @@
 uv venv .venv --python=3.10 --seed
 source .venv/bin/activate
 
-# Install dependencies
-uv pip install --editable .
-```
+### 🔗 Required model files
+- [`realesrgan/realesrgan-ncnn-vulkan.exe`](https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-windows.zip) – Windows-only NCNN executable
+- `realesrgan/models/realesrgan-x4plus.bin`
+- `realesrgan/models/realesrgan-x4plus.param`
+- [`birefnet/birefnet.onnx`](https://github.com/ZhengPeng7/BiRefNet/releases/download/v1/BiRefNet-general-resolution_512x512-fp16-epoch_216.onnx) – 918,483KB version with weights included
 
 > After installation, the `sl0thify` CLI will be available in your environment.
 
