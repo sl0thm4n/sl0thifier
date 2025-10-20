@@ -21,8 +21,24 @@
 - Python 3.10+
 - CUDA Toolkit (11.2 or later recommended) ✨
 - cuDNN (matching CUDA version)
-- ONNX Runtime
 - Vulkan-compatible GPU for RealESRGAN NCNN executable (Windows only)
+
+### 🔗 Required model files
+- [`realesrgan/realesrgan-ncnn-vulkan.exe`](https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-windows.zip) – Windows-only NCNN executable
+- `realesrgan/models/realesrgan-x4plus.bin`
+- [`birefnet/birefnet.onnx`](https://github.com/ZhengPeng7/BiRefNet/releases/download/v1/BiRefNet-general-resolution_512x512-fp16-epoch_216.onnx) – 918,483KB version with weights included
+
+> If using background removal or super-resolution, ensure your system supports CUDA acceleration for best performance.
+
+---
+
+## 📊 Requirements
+
+### 1. Create environment (Python 3.10+)
+
+```bash
+uv venv .venv --python=3.10 --seed
+source .venv/bin/activate
 
 ### 🔗 Required model files
 - [`realesrgan/realesrgan-ncnn-vulkan.exe`](https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-windows.zip) – Windows-only NCNN executable
@@ -30,7 +46,22 @@
 - `realesrgan/models/realesrgan-x4plus.param`
 - [`birefnet/birefnet.onnx`](https://github.com/ZhengPeng7/BiRefNet/releases/download/v1/BiRefNet-general-resolution_512x512-fp16-epoch_216.onnx) – 918,483KB version with weights included
 
-> If using background removal or super-resolution, ensure your system supports CUDA acceleration for best performance.
+> After installation, the `sl0thify` CLI will be available in your environment.
+
+### 2. Download model files manually
+
+Place the following files in the project directory structure:
+- `realesrgan/realesrgan-ncnn-vulkan.exe`
+- `realesrgan/models/realesrgan-x4plus.bin`
+- `birefnet/birefnet.onnx`
+
+See [Required model files](#-required-model-files) for direct links.
+
+### 3. (Optional) Run the GUI
+
+```bash
+python main.py
+```
 
 ---
 
@@ -63,7 +94,7 @@ A simple GUI is available via `main.py` using `tkinter` and `tkinterdnd2`. Featu
 
 ---
 
-## 🪠 Image Processing Pipeline
+## 🦠 Image Processing Pipeline
 
 Each image passes through the following steps:
 
@@ -89,10 +120,10 @@ Each image passes through the following steps:
 
 | Feature               | Windows | Linux          | macOS          |
 |----------------------|---------|----------------|----------------|
-| Tkinter + DnD        | ✅ Full  | ⚠ Limited       | ⚠ Limited       |
+| Tkinter + DnD        | ✅ Full  | ⚠️ Limited       | ⚠️ Limited       |
 | RealESRGAN Executable| ✅ Yes   | ❌ Needs binary | ❌ Not available |
 | ONNX Runtime         | ✅ Yes   | ✅ Yes         | ✅ Yes         |
-| Full Pipeline        | ✅ Works| ⚠ Minor fixes   | ⚠ Minor fixes   |
+| Full Pipeline        | ✅ Works| ⚠️ Minor fixes   | ⚠️ Minor fixes   |
 
 ---
 
@@ -130,21 +161,31 @@ Author: [sl0thm4n](https://github.com/sl0thm4n)
 ---
 
 ## 📁 Project Structure
-
 ```
 sl0thifier/
 ├── __init__.py
-├── config/         # Pydantic configuration models
-├── core/
-│   ├── imageio.py  # Image loading and saving
-│   ├── resize.py   # Image resizing operations
-│   └── tone.py     # Color/tone adjustments
-├── models/
-│   ├── birefnet.py     # ONNX model handler
-│   └── realesrgan.py   # Real-ESRGAN interface
-├── utils/          # Logging, helpers, etc.
+├── assets/
+│   └── sl0thm4n.ico
+├── core.py
+├── exceptions.py
+├── logger.py
+├── models.py
+├── preprocess.py
+├── utils.py
 sl0thify.py         # CLI entrypoint
-tests/              # pytest test suite
+main.py             # GUI entrypoint
+tests/
+├── __init__.py
+├── conftest.py
+└── test_models.py
+
+birefnet/
+└── birefnet.onnx
+
+realesrgan/
+├── realesrgan-ncnn-vulkan.exe
+└── models/
+    └── realesrgan-x4plus.bin
 ```
 
 ---
