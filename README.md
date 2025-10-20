@@ -4,18 +4,6 @@
 
 ---
 
-## ✨ Features
-
-- ✅ Fast inference using ONNX runtime  
-- ✅ Super-resolution enhancement via Real-ESRGAN  
-- ✅ Modular image processing (`imageio`, `resize`, `tone`, etc.)  
-- ✅ Type-safe configuration using Pydantic v2  
-- ✅ Clean, test-driven codebase with full coverage  
-- ✅ Semantic versioning and automated release process  
-- ✅ 🧠 One-command smart CLI with parallel processing  
-
----
-
 ## 📊 Requirements
 
 - Python 3.10+
@@ -82,7 +70,7 @@ sl0thify --images=./cats/cat1.jpg --model-name=realesrnet-x4plus --width=256 --h
 
 A simple GUI is available via `main.py` using `tkinter` and `tkinterdnd2`. Features include:
 
-- 💾 Drag & Drop support for files and folders
+- 📂 Drag & Drop support for files and folders
 - ⚖️ Options:
   - Remove Background (optional)
   - New Background Color (None / White / Black / Green)
@@ -188,7 +176,7 @@ realesrgan/
 
 ---
 
-## 🙌 Contribution Guide
+## 🤝 Contribution Guide
 
 Pull requests and contributions are welcome!
 
@@ -209,7 +197,6 @@ Before submitting a PR:
 - ONNX Runtime  
 - Real-ESRGAN  
 - NumPy, OpenCV, Pillow  
-- Pydantic v2  
 - Pytest, Coverage, Ruff, Black  
 - `uv` for dependency and environment management  
 
