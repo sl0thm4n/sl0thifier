@@ -19,7 +19,9 @@ def process_image(
     img_path: Path,
     output_dir: Path,
     model_name: str,
-    target_size: tuple[int, int],
+    clip_limit: float = 1.0,
+    tile_size: int = 4,
+    target_size: tuple[int, int] = (512, 512),
     remove_bg: bool = False,
     bg_color: Literal["none", "white", "black", "green"] = "none",
 ):
@@ -32,6 +34,9 @@ def process_image(
             img,
             output_width=target_size[0],
             output_height=target_size[1],
+            model_name=model_name,
+            clip_limit=clip_limit,
+            tile_size=tile_size,
             remove_bg=remove_bg,
             bg_color=bg_color,
         )
@@ -61,6 +66,10 @@ def main():
     parser.add_argument(
         "--model-name", default="realesrgan-x4plus", help="Upscaler model"
     )
+    parser.add_argument(
+        "--clip-limit", type=float, default=1.0, help="CLAHE clip limit"
+    )
+    parser.add_argument("--tile-size", type=int, default=4, help="CLAHE tile size")
     parser.add_argument("--width", type=int, required=True, help="Final image width")
     parser.add_argument("--height", type=int, required=True, help="Final image height")
     parser.add_argument("--output-dir", help="Directory to save processed images")
@@ -99,7 +108,9 @@ def main():
                 img_path,
                 output_dir,
                 args.model_name,
-                size,
+                clip_limit=clip_limit,
+                tile_size=tile_size,
+                size=size,
                 remove_bg=args.remove_bg,
                 bg_color=args.bg_color,
             )
