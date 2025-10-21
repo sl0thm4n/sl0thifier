@@ -170,6 +170,8 @@ class ImageEnhancer(Sl0thifierBaseClass):
             Image.Image: Enhanced image instance.
         """
         # Convert PIL image to NumPy array (RGB)
+        clip_limit = kwargs.get("clip_limit", 1.0)
+        tile_size = kwargs.get("tile_size", 4)
         rgb_array = np.array(img.convert("RGB"))
 
         try:
@@ -178,7 +180,9 @@ class ImageEnhancer(Sl0thifierBaseClass):
             lightness_channel, a_channel, b_channel = cv2.split(lab_array)
 
             # Apply CLAHE to the lightness channel
-            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+            clahe = cv2.createCLAHE(
+                clipLimit=clip_limit, tileGridSize=(tile_size, tile_size)
+            )
             enhanced_lightness = clahe.apply(lightness_channel)
 
             # Merge channels and convert back to RGB
