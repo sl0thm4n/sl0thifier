@@ -12,12 +12,13 @@ dependencies = [
     "onnxruntime-gpu>=1.23.0",
     "opencv-python>=4.11.0.86",
     "pillow>=12.0.0",
+    "pyside6>=6.10.0",
     "rembg>=2.0.67",
-    "tkinterdnd2>=0.4.3",
 ]
 
 [dependency-groups]
 dev = [
+    "black>=25.9.0",
     "bump-my-version>=1.2.4",
     "pytest>=8.4.2",
     "pytest-black>=0.6.0",

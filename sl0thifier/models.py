@@ -1,11 +1,15 @@
+import platform
+import shutil
 import subprocess
 import tempfile
 import uuid
 from abc import abstractmethod
 from pathlib import Path
-from typing import Optional
+from typing import ClassVar, Optional
+import zipfile
 
 import cv2
+import httpx
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
@@ -50,22 +54,19 @@ class Sl0thifierBaseClass(BaseModel):
 
 
 class ImageUpscaler(Sl0thifierBaseClass):
-    """Image upscaler class."""
+    """Image upscaler using Real-ESRGAN NCNN-Vulkan executable."""
 
     def sl0thify(self, img: Image.Image, **kwargs) -> Image.Image:
-        model_name = kwargs.get("model_name", "realesrgan-x4plus")  # 🧼 Default preset
+        model_name = kwargs.get("model_name", "realesrgan-x4plus")
         scale = kwargs.get("scale", 4)
 
-        exe = WORKING_DIR / "realesrgan" / "realesrgan-ncnn-vulkan.exe"
-        if not exe.exists():
-            raise ModelNotInstalled("Real-ESRGAN binary not found. Run `slth install`.")
+        exe = self.ensure_model()
 
         input_path = self._create_tmp("slth_in.png")
         output_path = self._create_tmp("slth_out.png")
 
         try:
             img.save(input_path)
-
             cmd = [
                 str(exe),
                 "-i",
@@ -80,17 +81,80 @@ class ImageUpscaler(Sl0thifierBaseClass):
 
             subprocess.run(cmd, check=True)
             result = Image.open(output_path).convert("RGB")
-
             logger.info("🦥 Upscaled ×%s using '%s'", scale, model_name)
             return result
 
         except subprocess.CalledProcessError as e:
-            logger.error("❌ Real-ESRGAN failed: %s", e)
+            logger.error("❌ Real-ESRGAN execution failed: %s", e)
             raise RuntimeError("Real-ESRGAN execution failed") from e
 
         finally:
             self._cleanup_tmp(input_path)
             self._cleanup_tmp(output_path)
+
+    def ensure_model(self) -> Path:
+        """Ensure the Real-ESRGAN binary is downloaded and ready to use."""
+        system = platform.system()
+        realesrgan_dir = WORKING_DIR / "realesrgan"
+
+        match system:
+            case "Windows":
+                exe_name = "realesrgan-ncnn-vulkan.exe"
+                zip_url = "https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan/releases/download/v20220424/realesrgan-ncnn-vulkan-20220424-windows.zip"
+            case "Linux":
+                exe_name = "realesrgan-ncnn-vulkan"
+                zip_url = "https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan/releases/download/v20220424/realesrgan-ncnn-vulkan-20220424-ubuntu.zip"
+            case "Darwin":
+                exe_name = "realesrgan-ncnn-vulkan"
+                zip_url = "https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan/releases/download/v20220424/realesrgan-ncnn-vulkan-20220424-macos.zip"
+            case _:
+                raise RuntimeError(f"Unsupported OS: {system}")
+
+        exe = realesrgan_dir / exe_name
+        if exe.exists():
+            return exe
+
+        logger.warning("Real-ESRGAN binary not found. Downloading...")
+
+        realesrgan_dir.mkdir(parents=True, exist_ok=True)
+        zip_path = realesrgan_dir / "realesrgan.zip"
+
+        # Download zip via httpx
+        try:
+            with httpx.stream("GET", zip_url, timeout=60.0) as response:
+                response.raise_for_status()
+                with open(zip_path, "wb") as f:
+                    for chunk in response.iter_bytes():
+                        f.write(chunk)
+            logger.info("✅ Downloaded Real-ESRGAN package.")
+        except Exception as e:
+            logger.error("❌ Failed to download Real-ESRGAN: %s", e)
+            raise ModelNotInstalled("Could not download Real-ESRGAN package.") from e
+
+        # Extract & find binary
+        try:
+            with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                zip_ref.extractall(realesrgan_dir)
+            logger.info("✅ Extracted Real-ESRGAN package.")
+
+            inner_exe = next(realesrgan_dir.rglob(exe_name), None)
+            if inner_exe and inner_exe != exe:
+                shutil.move(str(inner_exe), str(exe))
+
+            if system != "Windows" and exe.exists():
+                exe.chmod(exe.stat().st_mode | 0o111)
+                logger.info("✅ Set execute permissions.")
+        except Exception as e:
+            logger.error("❌ Failed to extract or prepare Real-ESRGAN: %s", e)
+            raise ModelNotInstalled("Failed to extract or prepare Real-ESRGAN.") from e
+        finally:
+            if zip_path.exists():
+                zip_path.unlink()
+
+        if not exe.exists():
+            raise ModelNotInstalled("Real-ESRGAN executable not found after install.")
+
+        return exe
 
 
 class ImageEnhancer(Sl0thifierBaseClass):
@@ -133,65 +197,82 @@ class ImageEnhancer(Sl0thifierBaseClass):
 class ImageBackgroundRemover(Sl0thifierBaseClass):
     """Image background remover using BiRefNet ONNX model.
 
-    Download backend model from:
-    https://github.com/ZhengPeng7/BiRefNet/releases/download/v1/BiRefNet-general-resolution_512x512-fp16-epoch_216.onnx
+    Downloads the model automatically if not found.
 
-
-    Args:
-        Sl0thifierBaseClass (_type_): _description_
+    Uses BiRefNet:
+    https://github.com/ZhengPeng7/BiRefNet
     """
+
+    MODEL_URL: ClassVar[str] = (
+        "https://github.com/ZhengPeng7/BiRefNet/releases/download/v1/BiRefNet-general-resolution_512x512-fp16-epoch_216.onnx"
+    )
+    MODEL_FILENAME: ClassVar[str] = "birefnet.onnx"
+    MODEL_DIR: ClassVar[Path] = WORKING_DIR / "birefnet"
+    MODEL_PATH: ClassVar[Path] = MODEL_DIR / MODEL_FILENAME
+
+    def ensure_model(self):
+        if self.MODEL_PATH.exists():
+            return
+
+        logger.warning("BiRefNet model not found. Downloading...")
+        self.MODEL_DIR.mkdir(parents=True, exist_ok=True)
+
+        try:
+            response = httpx.get(self.MODEL_URL, timeout=30.0, follow_redirects=True)
+            response.raise_for_status()
+
+            with open(self.MODEL_PATH, "wb") as f:
+                f.write(response.content)
+
+            logger.info(
+                "✅ BiRefNet model downloaded successfully to %s", self.MODEL_PATH
+            )
+
+        except Exception as e:
+            logger.error("❌ Failed to download BiRefNet ONNX model: %s", e)
+            raise ModelNotInstalled(
+                "Could not download BiRefNet model. Check your internet connection."
+            ) from e
 
     def sl0thify(self, img: Image.Image, **kwargs) -> Image.Image:
         bg_color = kwargs.get("bg_color", "None")
 
-        model_path = WORKING_DIR / "birefnet" / "birefnet.onnx"
-        if not model_path.exists():
-            raise ModelNotInstalled(
-                "BiRefNet ONNX model not found. Run `slth install`."
-            )
+        self.ensure_model()
 
-        # Resize input image to (512, 512)
+        # Resize image to 512x512 for model input
         resized_img = img.convert("RGB").resize((512, 512))
         np_img = np.array(resized_img).astype(np.float32) / 255.0
         input_tensor = np.transpose(np_img, (2, 0, 1))[None, ...]  # (1, 3, 512, 512)
 
         try:
-            ort_session = ort.InferenceSession(str(model_path))
+            ort_session = ort.InferenceSession(str(self.MODEL_PATH))
             outputs = ort_session.run(["output_image"], {"input_image": input_tensor})
-            alpha_mask = outputs[0][0, 0]  # shape: (512, 512)
+            alpha_mask = outputs[0][0, 0]  # (512, 512)
         except Exception as e:
             logger.error("❌ BiRefNet ONNX inference failed: %s", e)
             raise RuntimeError("BiRefNet inference failed") from e
 
-        # Resize alpha mask to match original image size
+        # Resize alpha mask to original image size
         alpha_mask_resized = cv2.resize(
             alpha_mask, img.size, interpolation=cv2.INTER_LINEAR
         )
         alpha_uint8 = (alpha_mask_resized * 255).clip(0, 255).astype(np.uint8)
 
         rgba_array = np.dstack((np.array(img.convert("RGB")), alpha_uint8))
-        logger.info("🦥 Removed background using BiRefNet")
-
-        # Add background color handling here if bg_color is provided. If color is None,
-        # keep transparency.
-
         final_img = Image.fromarray(rgba_array, "RGBA")
 
-        if bg_color not in (
-            "none",
-            "None",
-            None,
-        ):
+        logger.info("🦥 Removed background using BiRefNet")
+
+        # Background color compositing if needed
+        if bg_color not in ("none", "None", None):
             try:
-                # Create background image
                 bg = Image.new("RGBA", final_img.size, bg_color)
-                # Composite foreground and background
                 final_img = Image.alpha_composite(bg, final_img).convert("RGB")
                 logger.info("🦥 Applied background color: %s", bg_color)
-                return final_img
             except ValueError:
-                logger.error("❌ Error applying alpha mask for background removal.")
+                logger.error("❌ Error applying background color.")
                 raise
+
         return final_img
 
 

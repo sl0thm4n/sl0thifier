@@ -1,107 +1,261 @@
+from PySide6.QtWidgets import (
+    QApplication,
+    QWidget,
+    QVBoxLayout,
+    QLabel,
+    QPushButton,
+    QFileDialog,
+    QProgressBar,
+    QComboBox,
+    QCheckBox,
+)
+from PySide6.QtCore import Qt, QThread, Signal, QObject
+from PySide6.QtGui import QIcon
+import sys
 import os
-import tkinter as tk
-from pathlib import Path
-from tkinter import ttk
-
-from PIL import Image
-from tkinterdnd2 import DND_FILES, TkinterDnD
-
-from sl0thifier.models import KingSl0th
+from glob import glob
 
 
-class Sl0thifyGUI:
+class DropLabel(QLabel):
+    files_dropped = Signal(list)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        paths = []
+        for url in event.mimeData().urls():
+            path = url.toLocalFile()
+            if os.path.isfile(path) and path.lower().endswith(
+                (".png", ".jpg", ".jpeg", ".webp")
+            ):
+                paths.append(path)
+            elif os.path.isdir(path):
+                for root, _, files in os.walk(path):
+                    for f in files:
+                        if f.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+                            paths.append(os.path.join(root, f))
+        self.files_dropped.emit(paths)
+
+
+class Worker(QObject):
+    finished = Signal(str)
+    progress = Signal(int)
+
+    def __init__(
+        self, img_path, output_path, width, height, remove_bg, bg_color, model_name
+    ):
+        super().__init__()
+        self.img_path = img_path
+        self.output_path = output_path
+        self.width = width
+        self.height = height
+        self.remove_bg = remove_bg
+        self.bg_color = bg_color
+        self.model_name = model_name
+
+    def run(self):
+        from sl0thify import KingSl0th
+        from PIL import Image
+        import traceback
+
+        try:
+            print(f"[Worker] Processing: {self.img_path}")
+            image = Image.open(self.img_path)
+            image.load()
+
+            king = KingSl0th(
+                model_name=self.model_name, width=self.width, height=self.height
+            )
+
+            result_image = king.sl0thify(
+                img=image,
+                output_width=self.width,
+                output_height=self.height,
+                remove_bg=self.remove_bg,
+                bg_color=self.bg_color,
+            )
+
+            name = os.path.splitext(os.path.basename(self.img_path))[0]
+            save_path = os.path.join(self.output_path, f"{name}_sl0thified.png")
+            result_image.save(save_path)
+            print(f"[Worker] Sl0thified & saved: {save_path}")
+
+        except Exception as e:
+            print(f"[Worker][ERROR] Failed to sl0thify '{self.img_path}': {e}")
+            traceback.print_exc()
+
+        finally:
+            self.progress.emit(100)
+            self.finished.emit(self.img_path)
+
+
+class Sl0thifierGUI(QWidget):
     def __init__(self):
-        self.root = TkinterDnD.Tk()
-        self.root.title("Sl0thify")
-        self.root.geometry("600x800")
-        self.root.resizable(False, False)
+        super().__init__()
 
-        self.remove_bg_var = tk.BooleanVar(value=False)
-        self.bg_color_var = tk.StringVar(value="None")
+        # ✅ 제목 및 아이콘
+        self.setWindowTitle("sl0thifier 🦥")
+        icon_path = os.path.join(".", "sl0thifier", "assets", "sl0thm4n.ico")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
 
-        # Top options
-        options_frame = tk.Frame(self.root)
-        options_frame.pack(pady=(10, 0))
+        self.setMinimumSize(400, 300)
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
 
-        tk.Checkbutton(
-            options_frame, text="Remove Background", variable=self.remove_bg_var
-        ).pack(side=tk.LEFT, padx=10)
-        tk.Label(options_frame, text="New Background Color:").pack(side=tk.LEFT)
-        tk.OptionMenu(
-            options_frame, self.bg_color_var, "None", "White", "Black", "Green"
-        ).pack(side=tk.LEFT, padx=5)
+        self.selected_width = 512
+        self.selected_height = 512
+        self.threads = []
+        self.workers = []
 
-        # Drop zone
-        self.drop_label = tk.Label(
-            self.root,
-            text="Drop files or folders here",
-            relief="ridge",
-            borderwidth=2,
-            width=64,
-            height=16,
+        # Drop label
+        self.label = DropLabel()
+        self.label.setText("Drop images or folders here")
+        self.label.setStyleSheet(
+            "font-size: 16px; border: 2px dashed gray; padding: 40px;"
         )
-        self.drop_label.pack(pady=10)
-        self.drop_label.drop_target_register(DND_FILES)
-        self.drop_label.dnd_bind("<<Drop>>", self.on_drop)
+        self.label.setMinimumHeight(100)
+        self.label.setAlignment(Qt.AlignCenter)
+        self.label.files_dropped.connect(self.handle_dropped_files)
+        self.layout.addWidget(self.label)
+
+        # Remove BG
+        self.remove_bg_checkbox = QCheckBox("Remove Background")
+        self.remove_bg_checkbox.stateChanged.connect(self.toggle_bg_color_select)
+        self.layout.addWidget(self.remove_bg_checkbox)
+
+        self.bg_color_label = QLabel("New Background Color:")
+        self.bg_color_select = QComboBox()
+        self.bg_color_select.addItems(["None", "White", "Black", "Green"])
+        self.bg_color_select.setEnabled(False)
+        self.layout.addWidget(self.bg_color_label)
+        self.layout.addWidget(self.bg_color_select)
+
+        # Model selection
+        self.model_select = QComboBox()
+        model_names = self.load_models()
+        self.model_select.addItems(model_names)
+        self.layout.addWidget(QLabel("Upscaler Model:"))
+        self.layout.addWidget(self.model_select)
+
+        # Output size
+        self.size_select = QComboBox()
+        self.size_select.addItems(["512 x 512", "1024 x 1024"])
+        self.size_select.currentIndexChanged.connect(self.update_output_size)
+        self.layout.addWidget(QLabel("Output Size:"))
+        self.layout.addWidget(self.size_select)
+
+        # Output folder
+        self.choose_button = QPushButton("Choose Output Folder")
+        self.choose_button.clicked.connect(self.select_output_dir)
+        self.layout.addWidget(self.choose_button)
 
         # Progress bar
-        self.progress = ttk.Progressbar(
-            self.root, orient="horizontal", length=512, mode="determinate"
+        self.progress = QProgressBar()
+        self.layout.addWidget(self.progress)
+
+        # Start button
+        self.start_button = QPushButton("Sl0thify Now!")
+        self.start_button.setStyleSheet(
+            "font-size: 16px; padding: 12px; background-color: #88cc88; font-weight: bold;"
         )
-        self.progress.pack(pady=(0, 20))
+        self.start_button.clicked.connect(self.sl0thify_images)
+        self.layout.addWidget(self.start_button)
 
-        self.king = KingSl0th(model_name="realesrgan-x4plus", width=512, height=512)
+    def load_models(self):
+        model_dir = os.path.join(".", "realesrgan", "models")
+        if not os.path.isdir(model_dir):
+            return []
 
-        self.root.mainloop()
+        bin_files = glob(os.path.join(model_dir, "*.bin"))
+        param_files = glob(os.path.join(model_dir, "*.param"))
 
-    def on_drop(self, event):
-        paths = self.root.tk.splitlist(event.data)
-        all_files = []
-        for path in paths:
-            if os.path.isdir(path):
-                for root, _, files in os.walk(path):
-                    all_files += [
-                        os.path.join(root, f)
-                        for f in files
-                        if f.lower().endswith(("png", "jpg", "jpeg"))
-                    ]
-            else:
-                if path.lower().endswith(("png", "jpg", "jpeg")):
-                    all_files.append(path)
+        bin_names = {os.path.splitext(os.path.basename(f))[0] for f in bin_files}
+        param_names = {os.path.splitext(os.path.basename(f))[0] for f in param_files}
 
-        self.process_files(all_files)
+        model_names = sorted(bin_names & param_names)
+        print(f"[Model Loader] Found models: {model_names}")
+        return model_names
 
-    def process_files(self, files):
-        total = len(files)
-        for i, file_path in enumerate(files):
-            self.progress["value"] = (i / total) * 100
-            self.root.update_idletasks()
-            try:
-                with Image.open(file_path) as img:
-                    output_base_dir = Path(file_path).parent / "sl0thified"
-                    output_base_dir.mkdir(parents=True, exist_ok=True)
+    def select_output_dir(self):
+        path = QFileDialog.getExistingDirectory(self, "Select Output Folder")
+        if path:
+            self.output_path = path
+            self.label.setText(f"Output folder selected:\n{path}")
 
-                    result_img = self.king.sl0thify(
-                        img,
-                        output_path=output_base_dir,
-                        output_width=img.width,
-                        output_height=img.height,
-                        remove_bg=self.remove_bg_var.get(),
-                        bg_color=self.bg_color_var.get(),
-                    )
+    def toggle_bg_color_select(self):
+        self.bg_color_select.setEnabled(self.remove_bg_checkbox.isChecked())
 
-                    output_path = (
-                        output_base_dir
-                        / f"{Path(file_path).stem}-sl0thified-{img.width}x{img.height}{Path(file_path).suffix}"
-                    )
-                    print(f"✅ Processed {file_path} -> {output_path}")
-                    result_img.save(output_path)
+    def handle_dropped_files(self, paths):
+        self.selected_paths = paths
+        self.label.setText(f"{len(self.selected_paths)} file(s) ready to sl0thify")
 
-            except Exception as e:
-                print(f"Error processing {file_path}: {e}")
+    def update_output_size(self):
+        size = self.size_select.currentText()
+        width, height = size.split(" x ")
+        self.selected_width = int(width)
+        self.selected_height = int(height)
 
-        self.progress["value"] = 100
+    def start_thread(self, img_path):
+        model_name = self.model_select.currentText()
+
+        thread = QThread()
+        worker = Worker(
+            img_path=img_path,
+            output_path=self.output_path,
+            width=self.selected_width,
+            height=self.selected_height,
+            remove_bg=self.remove_bg_checkbox.isChecked(),
+            bg_color=self.bg_color_select.currentText(),
+            model_name=model_name,
+        )
+        worker.moveToThread(thread)
+
+        thread.started.connect(worker.run)
+        worker.finished.connect(self.on_done)
+        worker.progress.connect(self.progress.setValue)
+        worker.finished.connect(thread.quit)
+        worker.finished.connect(worker.deleteLater)
+        thread.finished.connect(thread.deleteLater)
+
+        self.threads.append(thread)
+        self.workers.append(worker)
+
+        thread.start()
+
+    def on_done(self, img_path):
+        print(f"[GUI] Sl0thified: {img_path}")
+        self.label.setText(f"Sl0thified: {os.path.basename(img_path)}")
+
+    def sl0thify_images(self):
+        if not hasattr(self, "selected_paths") or not self.selected_paths:
+            self.label.setText("No images dropped.")
+            return
+
+        if not hasattr(self, "output_path") or not self.output_path:
+            self.label.setText("No valid output folder selected.")
+            return
+
+        for img_path in self.selected_paths:
+            self.start_thread(img_path)
+
+    def closeEvent(self, event):
+        print("[GUI] Closing: Waiting for threads to finish...")
+        for thread in self.threads:
+            if thread.isRunning():
+                thread.quit()
+                thread.wait()
+        event.accept()
 
 
 if __name__ == "__main__":
-    Sl0thifyGUI()
+    app = QApplication(sys.argv)
+    window = Sl0thifierGUI()
+    window.show()
+    sys.exit(app.exec())
