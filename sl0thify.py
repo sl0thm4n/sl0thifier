@@ -2,10 +2,12 @@ import argparse
 import os
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
+from typing import Literal
 
 from PIL import Image
 
-from sl0thifier.models import ImageEnhancer, ImageUpscaler
+from sl0thifier.models import KingSl0th
+from sl0thifier.logger import logger
 
 try:
     resample = Image.Resampling.LANCZOS
@@ -14,19 +16,25 @@ except AttributeError:
 
 
 def process_image(
-    img_path: Path, output_dir: Path, model_name: str, target_size: tuple[int, int]
+    img_path: Path,
+    output_dir: Path,
+    model_name: str,
+    target_size: tuple[int, int],
+    remove_bg: bool = False,
+    bg_color: Literal["none", "white", "black", "green"] = "none",
 ):
     try:
         img = Image.open(img_path).convert("RGB")
 
-        # Step 1: Upscale
-        upscaled = ImageUpscaler().sl0thify(img, model_name=model_name, scale=4)
-
-        # Step 2: Enhance
-        enhanced = ImageEnhancer().sl0thify(upscaled)
-
-        # Step 3: Resize to final size
-        final = enhanced.resize(target_size, resample)
+        ks = KingSl0th(model_name=model_name)
+        logger.info(f"🦥 Sl0thifying {img_path.name}...")
+        final = ks.sl0thify(
+            img,
+            output_width=target_size[0],
+            output_height=target_size[1],
+            remove_bg=remove_bg,
+            bg_color=bg_color,
+        )
 
         # Save
         output_path = output_dir / img_path.name
@@ -56,6 +64,16 @@ def main():
     parser.add_argument("--width", type=int, required=True, help="Final image width")
     parser.add_argument("--height", type=int, required=True, help="Final image height")
     parser.add_argument("--output-dir", help="Directory to save processed images")
+    parser.add_argument(
+        "--remove-bg", type=bool, default=False, help="Remove background"
+    )
+    parser.add_argument(
+        "--bg-color",
+        type=str,
+        choices=["none", "white", "black", "green"],
+        default="none",
+        help="Background color to use if removing background",
+    )
 
     args = parser.parse_args()
 
@@ -76,7 +94,15 @@ def main():
 
     with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
         for img_path in img_paths:
-            executor.submit(process_image, img_path, output_dir, args.model_name, size)
+            executor.submit(
+                process_image,
+                img_path,
+                output_dir,
+                args.model_name,
+                size,
+                remove_bg=args.remove_bg,
+                bg_color=args.bg_color,
+            )
 
 
 if __name__ == "__main__":
