@@ -34,10 +34,6 @@ realesrgan/*
 /realesrgan
 
 # --- Image outputs ---
-*.png
-*.jpg
-*.jpeg
-*.webp
 512x512/
 1024x1024/
 __sloth_upscaled_*.png

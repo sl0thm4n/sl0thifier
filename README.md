@@ -4,6 +4,25 @@
 
 ---
 
+## 🖼 Example Input and Output
+
+<p align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="./examples/input.jpg" alt="Input image" width="220"/><br/>
+        <sub><strong>Original Input</strong></sub>
+      </td>
+      <td align="center">
+        <img src="./examples/input_sl0thified.png" alt="Sl0thified output" width="300"/><br/>
+        <sub><strong>Sl0thified, 1024x1024</strong></sub>
+      </td>
+    </tr>
+  </table>
+</p>
+
+---
+
 
 
 ## 📊 Requirements
