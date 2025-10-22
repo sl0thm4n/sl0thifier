@@ -1,22 +1,28 @@
+import os
+import sys
+from glob import glob
+from queue import Queue
+from threading import Thread
+
+from PIL import Image
+from PySide6.QtCore import QObject, Qt, Signal
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QApplication,
-    QWidget,
-    QVBoxLayout,
-    QLabel,
-    QPushButton,
-    QFileDialog,
-    QComboBox,
     QCheckBox,
-    QSlider,
-    QHBoxLayout,
+    QComboBox,
+    QFileDialog,
     QGroupBox,
+    QLabel,
+    QProgressBar,
+    QPushButton,
+    QSlider,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt, QThread, Signal, QObject
-from PySide6.QtGui import QIcon
-import sys
-import os
-from glob import glob
+
 from sl0thifier.logger import logger
+from sl0thify import KingSl0th
 
 
 class DropLabel(QLabel):
@@ -74,10 +80,6 @@ class Worker(QObject):
         self.tile_size = tile_size
 
     def run(self):
-        from sl0thify import KingSl0th
-        from PIL import Image
-        import traceback
-
         try:
             logger.info("[Worker] Processing: %s", self.img_path)
             image = Image.open(self.img_path)
@@ -105,7 +107,6 @@ class Worker(QObject):
             logger.error(
                 "[Worker][ERROR] Failed to sl0thify '%s': %s", self.img_path, e
             )
-            traceback.print_exc()
 
         finally:
             self.progress.emit(100)
@@ -127,8 +128,9 @@ class Sl0thifierGUI(QWidget):
 
         self.selected_width = 512
         self.selected_height = 512
-        self.threads = []
-        self.workers = []
+
+        self.task_queue = Queue()
+        self.batch_thread = None
 
         self.label = DropLabel()
         self.label.setText("Drop images or folders here")
@@ -151,7 +153,6 @@ class Sl0thifierGUI(QWidget):
         self.layout.addWidget(self.bg_color_label)
         self.layout.addWidget(self.bg_color_select)
 
-        # Group: Enhancement Settings
         self.enhance_group = QGroupBox("Enhancement Settings")
         self.enhance_layout = QVBoxLayout()
 
@@ -196,8 +197,15 @@ class Sl0thifierGUI(QWidget):
         self.start_button.setStyleSheet(
             "font-size: 16px; padding: 12px; background-color: #88cc88; font-weight: bold;"
         )
-        self.start_button.clicked.connect(self.sl0thify_images)
+        self.start_button.clicked.connect(self.start_batch_processing)
         self.layout.addWidget(self.start_button)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setTextVisible(False)
+        self.progress_bar.setMinimumHeight(6)
+        self.progress_bar.setMaximumHeight(6)
+        self.progress_bar.setValue(0)
+        self.layout.addWidget(self.progress_bar)
 
     def update_clip_limit_label(self, value):
         real_value = value / 10.0
@@ -240,12 +248,40 @@ class Sl0thifierGUI(QWidget):
         self.selected_width = int(width)
         self.selected_height = int(height)
 
-    def start_thread(self, img_path):
+    def start_batch_processing(self):
+        if not hasattr(self, "selected_paths") or not self.selected_paths:
+            self.label.setText("No images dropped.")
+            return
+
+        if not hasattr(self, "output_path") or not self.output_path:
+            self.label.setText("No valid output folder selected.")
+            return
+
+        self.total_tasks = len(self.selected_paths)
+        self.completed_tasks = 0
+        self.progress_bar.setMaximum(self.total_tasks)
+        self.progress_bar.setValue(0)
+
+        for img_path in self.selected_paths:
+            self.task_queue.put(img_path)
+
+        if self.batch_thread is None or not self.batch_thread.is_alive():
+            self.batch_thread = Thread(target=self.worker_loop)
+            self.batch_thread.start()
+
+    def worker_loop(self):
+        while not self.task_queue.empty():
+            img_path = self.task_queue.get()
+            self.label.setText(f"Processing: {os.path.basename(img_path)}")
+            QApplication.processEvents()
+            self.run_worker(img_path)
+            self.task_queue.task_done()
+
+    def run_worker(self, img_path):
         model_name = self.model_select.currentText()
         clip_limit = self.clip_slider.value() / 10.0
         tile_size = self.tile_slider.value()
 
-        thread = QThread()
         worker = Worker(
             img_path=img_path,
             output_path=self.output_path,
@@ -257,41 +293,19 @@ class Sl0thifierGUI(QWidget):
             clip_limit=clip_limit,
             tile_size=tile_size,
         )
-        worker.moveToThread(thread)
 
-        thread.started.connect(worker.run)
-        worker.finished.connect(self.on_done)
-        worker.finished.connect(thread.quit)
-        worker.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
+        worker.run()
 
-        self.threads.append(thread)
-        self.workers.append(worker)
+        self.completed_tasks += 1
+        self.progress_bar.setValue(self.completed_tasks)
 
-        thread.start()
+        if self.completed_tasks == self.total_tasks:
+            self.label.setText("🎉 All images sl0thified!")
 
-    def on_done(self, img_path):
-        logger.info("[GUI] Sl0thified: %s", img_path)
-        self.label.setText(f"Sl0thified: {os.path.basename(img_path)}")
-
-    def sl0thify_images(self):
-        if not hasattr(self, "selected_paths") or not self.selected_paths:
-            self.label.setText("No images dropped.")
-            return
-
-        if not hasattr(self, "output_path") or not self.output_path:
-            self.label.setText("No valid output folder selected.")
-            return
-
-        for img_path in self.selected_paths:
-            self.start_thread(img_path)
+        QApplication.processEvents()
 
     def closeEvent(self, event):
-        logger.info("[GUI] Closing: Waiting for threads to finish...")
-        for thread in self.threads:
-            if thread.isRunning():
-                thread.quit()
-                thread.wait()
+        logger.info("[GUI] Closing")
         event.accept()
 
 
