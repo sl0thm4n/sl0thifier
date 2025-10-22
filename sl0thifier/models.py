@@ -3,10 +3,10 @@ import shutil
 import subprocess
 import tempfile
 import uuid
+import zipfile
 from abc import abstractmethod
 from pathlib import Path
 from typing import ClassVar, Optional
-import zipfile
 
 import cv2
 import httpx
@@ -66,7 +66,13 @@ class ImageUpscaler(Sl0thifierBaseClass):
         output_path = self._create_tmp("slth_out.png")
 
         try:
+            # 👇 핵심 변경: convert to RGB first
+            img = img.convert("RGB")
             img.save(input_path)
+
+            if not input_path.exists():
+                raise RuntimeError(f"[Upscaler] Temp input file missing: {input_path}")
+
             cmd = [
                 str(exe),
                 "-i",
@@ -79,7 +85,10 @@ class ImageUpscaler(Sl0thifierBaseClass):
                 str(scale),
             ]
 
+            logger.info("🧪 Executing: %s", " ".join(cmd))
+
             subprocess.run(cmd, check=True)
+
             result = Image.open(output_path).convert("RGB")
             logger.info("🦥 Upscaled ×%s using '%s'", scale, model_name)
             return result
