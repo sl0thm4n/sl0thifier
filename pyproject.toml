@@ -12,6 +12,7 @@ dependencies = [
     "onnxruntime-gpu>=1.23.0",
     "opencv-python>=4.11.0.86",
     "pillow>=12.0.0",
+    "pydantic>=2.12.3",
     "pyside6>=6.10.0",
     "rembg>=2.0.67",
 ]
