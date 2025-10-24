@@ -32,6 +32,7 @@ birefnet/models/*.*
 realesrgan/*
 /birefnet
 /realesrgan
+/gfpgan
 
 # --- Image outputs ---
 512x512/
