@@ -22,6 +22,15 @@ Image.MAX_IMAGE_PIXELS = None  # Disable limit completely
 from sl0thifier.logger import logger
 from sl0thifier.exceptions import ModelNotInstalled
 
+# Verify OpenCV installation
+try:
+    logger.info("OpenCV version: %s", cv2.__version__)
+    if not hasattr(cv2, 'cvtColor'):
+        raise ImportError("cv2.cvtColor not found! OpenCV installation may be corrupted.")
+except Exception as e:
+    logger.error("OpenCV verification failed: %s", e)
+    raise
+
 # =========================================
 # 📂 PATHS
 # =========================================
@@ -84,22 +93,22 @@ class FaceRefocuser(Sl0thifierBaseClass):
         # Process entire image with GFPGAN (it will find and restore faces automatically)
         restorer = GFPGANer(
             model_path=str(self.MODEL_PATH),
-            upscale=2,  # 2x upscale for better quality
+            upscale=1,  # No upscaling, only restoration (Real-ESRGAN handles upscaling)
             arch="clean",
             channel_multiplier=2,
             bg_upsampler=None,
         )
 
         try:
-            # Let GFPGAN handle the entire image with maximum quality settings
+            # Let GFPGAN handle the entire image with balanced restoration
             _, _, restored = restorer.enhance(
                 img_cv,
                 has_aligned=False,
                 only_center_face=False,
                 paste_back=True,
-                weight=1.0  # Full strength restoration for best quality
+                weight=0.7  # Reduced from 1.0 for more natural results
             )
-            logger.info("🦥 Successfully refocused %d face(s) with high quality", len(results.detections))
+            logger.info("🦥 Successfully refocused %d face(s) with balanced restoration", len(results.detections))
             torch.cuda.empty_cache()
             return Image.fromarray(cv2.cvtColor(restored, cv2.COLOR_BGR2RGB))
         except Exception as e:
@@ -199,6 +208,7 @@ class ImageUpscaler(Sl0thifierBaseClass):
                 "-o", str(out_path),
                 "-s", str(scale),
                 "-n", model_name,
+                "-t", "512",  # Large tile size to minimize artifacts
             ]
             logger.info("🧼 Real-ESRGAN cmd: %s", " ".join(['"%s"' % c if " " in c else c for c in cmd]))
 
@@ -238,8 +248,8 @@ class ImageEnhancer(Sl0thifierBaseClass):
     """Apply CLAHE and color enhancement."""
     
     def sl0thify(self, img: Image.Image, **kwargs) -> Image.Image:
-        clip_limit = kwargs.get("clip_limit", 1.0)
-        tile_size = kwargs.get("tile_size", 4)
+        clip_limit = kwargs.get("clip_limit", 1.5)  # Balanced for training data
+        tile_size = kwargs.get("tile_size", 32)  # Very large tiles to eliminate artifacts
         logger.info("✨ Applying CLAHE (clip=%.2f, tile=%d)", clip_limit, tile_size)
         img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2LAB)
         l, a, b = cv2.split(img_cv)
@@ -332,11 +342,11 @@ class KingSl0th(Sl0thifierBaseClass):
         # Step 1: Face refocus & restoration (2x upscale + full restoration)
         img = self.refocuser.sl0thify(img, **kwargs)
         
-        # Step 2: Upscale (4x upscale with Real-ESRGAN)
+        # Step 2: Upscale (4x upscale with Real-ESRGAN, large tiles to reduce artifacts)
         img = self.upscaler.sl0thify(img, **kwargs)
         
-        # Step 3: Enhance contrast and color (CLAHE)
-        img = self.enhancer.sl0thify(img, **kwargs)
+        # Step 3: CLAHE Enhancement - DISABLED to avoid artifacts
+        # img = self.enhancer.sl0thify(img, **kwargs)
         
         # Step 4: Remove background (optional)
         if remove_bg:
